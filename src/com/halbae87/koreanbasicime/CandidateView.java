@@ -74,7 +74,7 @@ public class CandidateView extends View {
      * @param attrs
      */
     @SuppressWarnings("deprecation")
-	public CandidateView(Context context) {
+    public CandidateView(Context context) {
         super(context);
         mSelectionHighlight = context.getResources().getDrawable(
                 android.R.drawable.list_selector_background);

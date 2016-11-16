@@ -177,6 +177,7 @@ public class SoftKeyboard extends InputMethodService
     @Override
     public void onUpdateExtractingVisibility(EditorInfo ei) {
         ei.imeOptions |= EditorInfo.IME_FLAG_NO_EXTRACT_UI;
+        ei.imeOptions |= EditorInfo.IME_FLAG_NO_FULLSCREEN;        
         super.onUpdateExtractingVisibility(ei);
     }
     
