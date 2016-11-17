@@ -994,44 +994,46 @@ public class SoftKeyboard extends InputMethodService
                     getCurrentInputConnection().commitText(String.valueOf((char) primaryCode), 1);
                     updateShiftKeyState(getCurrentInputEditorInfo());
                     return;
-                } else {
-        		// debug block..
-        		 // Log.v(TAG, "handleCharacter - After calling DoAutomata()");
-        		 // Log.v(TAG, "   KoreanMode = [" + (kauto.IsKoreanMode()? "true" : "false") + "]");
-        		 // Log.v(TAG, "   CompleteString = [" + kauto.GetCompleteString() + "]");
-        		 // Log.v(TAG, "   CompositionString = [" + kauto.GetCompositionString() + "]");
-        		 // Log.v(TAG, "   State = [" + kauto.GetState() + "]");
-        		 // Log.v(TAG, "   ret = [" + ret + "]");
-        		
-        		if ((ret & KoreanAutomata.ACTION_UPDATE_COMPLETESTR) != 0)
-	        	{
-        			// Log.v(TAG, "--- UPDATE_COMPLETESTR");
-	        		// mComposing.setLength(0);
-        			if (mComposing.length() > 0)
-        				mComposing.replace(mComposing.length()-1, mComposing.length(), kauto.GetCompleteString());
-        			else 
-        				mComposing.append(kauto.GetCompleteString());
-	            	if (mComposing.length() > 0) {
-	            		getCurrentInputConnection().setComposingText(mComposing, 1);
-	                    // commitTyped(getCurrentInputConnection());
-                            if ( kauto.IsKoreanMode() 
-                                    && (variation == EditorInfo.TYPE_TEXT_VARIATION_PASSWORD)
-                                    && (!kauto.GetCompleteString().equalsIgnoreCase("")) ) {
-                                getCurrentInputConnection().commitText(mComposing, 1);
-                                mComposing.setLength(0);
-	                }
-	        	}
-        		if ((ret & KoreanAutomata.ACTION_UPDATE_COMPOSITIONSTR) != 0)
-	        	{
-        			// Log.v(TAG, "--- UPDATE_COMPOSITIONSTR");
-	        		// mComposing.setLength(0);
-        			if ((mComposing.length() > 0) && ((ret & KoreanAutomata.ACTION_UPDATE_COMPLETESTR) == 0) && ((ret & KoreanAutomata.ACTION_APPEND) == 0))
-        				mComposing.replace(mComposing.length()-1, mComposing.length(), kauto.GetCompositionString());
-        			else 
-        				mComposing.append(kauto.GetCompositionString());
-	        		getCurrentInputConnection().setComposingText(mComposing, 1);
-	        	}
-        	}
+	            } else {
+	        		// debug block..
+	        		 // Log.v(TAG, "handleCharacter - After calling DoAutomata()");
+	        		 // Log.v(TAG, "   KoreanMode = [" + (kauto.IsKoreanMode()? "true" : "false") + "]");
+	        		 // Log.v(TAG, "   CompleteString = [" + kauto.GetCompleteString() + "]");
+	        		 // Log.v(TAG, "   CompositionString = [" + kauto.GetCompositionString() + "]");
+	        		 // Log.v(TAG, "   State = [" + kauto.GetState() + "]");
+	        		 // Log.v(TAG, "   ret = [" + ret + "]");
+	        		
+                    if ((ret & KoreanAutomata.ACTION_UPDATE_COMPLETESTR) != 0) {
+						// Log.v(TAG, "--- UPDATE_COMPLETESTR");
+						// mComposing.setLength(0);
+						if (mComposing.length() > 0)
+							mComposing.replace(mComposing.length() - 1, mComposing.length(), kauto.GetCompleteString());
+						else
+							mComposing.append(kauto.GetCompleteString());
+						
+						if (mComposing.length() > 0) {
+							getCurrentInputConnection().setComposingText(mComposing, 1);
+							// commitTyped(getCurrentInputConnection());
+							if (kauto.IsKoreanMode() && (variation == EditorInfo.TYPE_TEXT_VARIATION_PASSWORD)
+									&& (!kauto.GetCompleteString().equalsIgnoreCase(""))) {
+								getCurrentInputConnection().commitText(mComposing, 1);
+								mComposing.setLength(0);
+							}
+						}
+		        	}
+                    
+	        		if ((ret & KoreanAutomata.ACTION_UPDATE_COMPOSITIONSTR) != 0)
+		        	{
+	        			// Log.v(TAG, "--- UPDATE_COMPOSITIONSTR");
+		        		// mComposing.setLength(0);
+	        			if ((mComposing.length() > 0) && ((ret & KoreanAutomata.ACTION_UPDATE_COMPLETESTR) == 0) && ((ret & KoreanAutomata.ACTION_APPEND) == 0))
+	        				mComposing.replace(mComposing.length()-1, mComposing.length(), kauto.GetCompositionString());
+	        			else 
+	        				mComposing.append(kauto.GetCompositionString());
+		        		getCurrentInputConnection().setComposingText(mComposing, 1);
+		        	}
+	            }
+            }
     		if ((ret & KoreanAutomata.ACTION_USE_INPUT_AS_RESULT) != 0)
     		{
     			// Log.v(TAG, "--- USE_INPUT_AS_RESULT");
