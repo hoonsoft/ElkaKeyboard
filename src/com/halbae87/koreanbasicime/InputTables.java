@@ -30,6 +30,9 @@ public final class InputTables {
 	
 	public static final int KEYSTATE_FN = 64;	// just for future usage...
 	
+	// jkchoi
+	public static final int KEYSTATE_CAPS_LOCK = 70;
+	
 	public static final char BACK_SPACE = 0x8;
 
 	// formula to get HANGUL_CODE by composing consonants and vowel indexes

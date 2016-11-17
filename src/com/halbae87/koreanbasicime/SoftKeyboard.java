@@ -41,10 +41,10 @@ import java.util.List;
 
 /*
   just for reference
-  Hangul/English:	KEYCODE_KANA (218)
-  Hanja: 			KEYCODE_EISU (212)
-  Win (Left):		KEYCODE_META_LEFT (117)
-  Menu:				KEYCODE_MENU (82)
+  Hangul/English:    KEYCODE_KANA (218)
+  Hanja:             KEYCODE_EISU (212)
+  Win (Left):        KEYCODE_META_LEFT (117)
+  Menu:                KEYCODE_MENU (82)
   sys. req./prtscr: KEYCODE_SYSRQ (120)
  */
 /**
@@ -97,6 +97,8 @@ public class SoftKeyboard extends InputMethodService
     static final int KEYCODE_HANJA = 212;  // KeyEvent.KEYCODE_EISU is available from API 16
     static final int KEYCODE_WIN_LEFT = 117; // KeyEvent.KEYCODE_META_LEFT is available from API 11
     static final int KEYCODE_SYSREQ = 120; // KeyEvent.KEYCODE_SYSREQ is available from API 11
+  
+    private boolean mHwCapsLock = false;
     
     private LatinKeyboard mKoreanKeyboard;
     private LatinKeyboard mKoreanShiftedKeyboard;
@@ -353,10 +355,25 @@ public class SoftKeyboard extends InputMethodService
     	// Log.v(TAG,"onStartInputView ---- enter, restarting = " + restarting);
         mAttribute = attribute;
         // Apply the selected keyboard to the input view.
-    	if (kauto.IsKoreanMode())
-    		mCurKeyboard = mKoreanKeyboard;
-    	else
-    		mCurKeyboard = mQwertyKeyboard;
+        if (kauto.IsKoreanMode())
+            mCurKeyboard = mKoreanKeyboard;
+        else
+        {
+            int type = (attribute.inputType&EditorInfo.TYPE_MASK_CLASS);
+            switch (type) 
+            {
+            case EditorInfo.TYPE_CLASS_NUMBER:
+            case EditorInfo.TYPE_CLASS_DATETIME:
+            case EditorInfo.TYPE_CLASS_PHONE:
+                mCurKeyboard = mSymbolsKeyboard;
+                break;
+
+            default:
+                mCurKeyboard = mQwertyKeyboard;
+                break;
+            }
+        }
+        
         mInputView.setKeyboard(mCurKeyboard);
         mInputView.closing();
     	// Log.v(TAG,"onStartInputView ---- leave");
@@ -455,8 +472,17 @@ public class SoftKeyboard extends InputMethodService
     @SuppressWarnings({ })
 	@Override public boolean onKeyDown(int keyCode, KeyEvent event) {
     	// Log.v(TAG, "onKeyDown - keyCode = " + event.keyCodeToString(keyCode) + " ("+ keyCode +")");
-    	if (event.isShiftPressed())
-    		mHwShift = true;
+        if (event.isShiftPressed())
+        {
+            if (DEBUG)Log.d(TAG, "event.isShiftPressed() => true");
+            mHwShift = true;
+        }
+        
+        if (event.isCapsLockOn())
+        {
+            if (DEBUG)Log.d(TAG, "event.isCapsLockOn() => true");
+            mHwCapsLock = true;
+        }
     	// if ALT or CTRL meta keys are using, the key event should not be touched here and be passed through to. 
     	if ((event.getMetaState() & (KeyEvent.META_ALT_MASK | KeyEvent.META_CTRL_MASK)) == 0)   
     	{
@@ -588,7 +614,8 @@ public class SoftKeyboard extends InputMethodService
                 mMetaState = MetaKeyKeyListener.handleKeyUp(mMetaState, keyCode, event);
             // }
         }
-    	mHwShift = false;
+        mHwShift = false;
+        mHwCapsLock = false;
         
         return super.onKeyUp(keyCode, event);
     }
@@ -920,6 +947,24 @@ public class SoftKeyboard extends InputMethodService
         if (mHwShift)
         	keyState |= InputTables.KEYSTATE_SHIFT;
          // Log.v(TAG, "handleCharacter() - POS 1");
+        // jkchoi
+        if (mHwCapsLock && isAlphabet(primaryCode))
+        {
+            if (mHwShift)
+            {
+                primaryCode = Character.toLowerCase(primaryCode);
+            }
+            else 
+            {
+                primaryCode = Character.toUpperCase(primaryCode);
+                keyState |= InputTables.KEYSTATE_SHIFT;    
+            }
+            
+        }
+        else
+        {
+            Log.e(TAG,"handleCharacter() Alphabet error ~!!!");
+        }
         
 //        if (isAlphabet(primaryCode) && mPredictionOn ) {
         if (isAlphabet(primaryCode)) {
