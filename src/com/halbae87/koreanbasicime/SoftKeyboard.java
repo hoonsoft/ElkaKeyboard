@@ -109,6 +109,8 @@ public class SoftKeyboard extends InputMethodService
     private KoreanAutomata kauto;
     private boolean mNoKorean = false;
     
+    
+    EditorInfo mAttribute;
     /**
      * Main initialization of the input method component.  Be sure to call
      * to super class.
@@ -120,6 +122,7 @@ public class SoftKeyboard extends InputMethodService
         
         // enable for debug purpose only. otherwise, it will stuck here.
         // android.os.Debug.waitForDebugger();
+        mAttribute = null;
     }
     
     /**
@@ -191,6 +194,7 @@ public class SoftKeyboard extends InputMethodService
     @Override public void onStartInput(EditorInfo attribute, boolean restarting) {
         super.onStartInput(attribute, restarting);
     	// Log.v(TAG,"onStartInput ---- enter");
+        mAttribute = attribute;
         
         // Reset our state.  We want to do this even if restarting, because
         // the underlying state of the text editor could have changed in any way.
@@ -244,7 +248,7 @@ public class SoftKeyboard extends InputMethodService
                         variation == EditorInfo.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD) {
                     // Do not display predictions / what the user is typing
                     // when they are entering a password.
-                	mNoKorean = true;
+                    //mNoKorean = true;
                     // mPredictionOn = false;
                 }
                 
@@ -347,6 +351,7 @@ public class SoftKeyboard extends InputMethodService
     @Override public void onStartInputView(EditorInfo attribute, boolean restarting) {
         super.onStartInputView(attribute, restarting);
     	// Log.v(TAG,"onStartInputView ---- enter, restarting = " + restarting);
+        mAttribute = attribute;
         // Apply the selected keyboard to the input view.
     	if (kauto.IsKoreanMode())
     		mCurKeyboard = mKoreanKeyboard;
@@ -412,8 +417,7 @@ public class SoftKeyboard extends InputMethodService
      */
     private boolean translateKeyDown(int keyCode, KeyEvent event) {
     	// Log.v(TAG, "translateKeyDown() called");
-        mMetaState = MetaKeyKeyListener.handleKeyDown(mMetaState,
-                keyCode, event);
+        mMetaState = MetaKeyKeyListener.handleKeyDown(mMetaState, keyCode, event);
         int c = event.getUnicodeChar(MetaKeyKeyListener.getMetaState(mMetaState));
         mMetaState = MetaKeyKeyListener.adjustMetaAfterKeypress(mMetaState);
         InputConnection ic = getCurrentInputConnection();
@@ -581,8 +585,7 @@ public class SoftKeyboard extends InputMethodService
     	// Log.v(TAG, "onKeyUp - keyCode = " + event.keyCodeToString(keyCode));
         if (PROCESS_HARD_KEYS) {
             // if (mPredictionOn) {
-                mMetaState = MetaKeyKeyListener.handleKeyUp(mMetaState,
-                        keyCode, event);
+                mMetaState = MetaKeyKeyListener.handleKeyUp(mMetaState, keyCode, event);
             // }
         }
     	mHwShift = false;
@@ -921,14 +924,32 @@ public class SoftKeyboard extends InputMethodService
 //        if (isAlphabet(primaryCode) && mPredictionOn ) {
         if (isAlphabet(primaryCode)) {
         	int ret = kauto.DoAutomata((char )primaryCode, keyState);
-        	if (ret < 0)
-        	{
-        		 // Log.v(TAG,"handleCharacter() - DoAutomata() call failed. primaryCode = " + primaryCode + " keyStete = " + keyState);
-        		if (kauto.IsKoreanMode())
-        			kauto.ToggleMode();
-        	}
-        	else 
-        	{
+            if (ret < 0) {
+                if (DEBUG) Log.v(TAG,"handleCharacter() - DoAutomata() call failed. primaryCode = " + primaryCode + " keyStete = " + keyState);
+                if (kauto.IsKoreanMode())
+                    kauto.ToggleMode();
+            } else {
+                int variation = 0;
+                
+                if ( mAttribute != null ) {
+                    variation = mAttribute.inputType &  EditorInfo.TYPE_MASK_VARIATION;
+                } else {
+                    variation = -1000;
+                }
+                
+                if (DEBUG) Log.d(TAG, "handleCharacter() variation = " + variation);
+                if (DEBUG) Log.d(TAG, "mComposing.length()  = " + mComposing.length() );
+                
+                if ( !kauto.IsKoreanMode() && (variation == EditorInfo.TYPE_TEXT_VARIATION_PASSWORD)) {
+                    if (mComposing.length() > 0) {
+                        getCurrentInputConnection().commitText(mComposing, 1);
+                        mComposing.setLength(0);
+                    }
+                    kauto.FinishAutomataWithoutInput();
+                    getCurrentInputConnection().commitText(String.valueOf((char) primaryCode), 1);
+                    updateShiftKeyState(getCurrentInputEditorInfo());
+                    return;
+                } else {
         		// debug block..
         		 // Log.v(TAG, "handleCharacter - After calling DoAutomata()");
         		 // Log.v(TAG, "   KoreanMode = [" + (kauto.IsKoreanMode()? "true" : "false") + "]");
@@ -948,6 +969,11 @@ public class SoftKeyboard extends InputMethodService
 	            	if (mComposing.length() > 0) {
 	            		getCurrentInputConnection().setComposingText(mComposing, 1);
 	                    // commitTyped(getCurrentInputConnection());
+                            if ( kauto.IsKoreanMode() 
+                                    && (variation == EditorInfo.TYPE_TEXT_VARIATION_PASSWORD)
+                                    && (!kauto.GetCompleteString().equalsIgnoreCase("")) ) {
+                                getCurrentInputConnection().commitText(mComposing, 1);
+                                mComposing.setLength(0);
 	                }
 	        	}
         		if ((ret & KoreanAutomata.ACTION_UPDATE_COMPOSITIONSTR) != 0)
