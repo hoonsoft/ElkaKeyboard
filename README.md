@@ -1,4 +1,4 @@
-# Kp Basic IME
+# ElkaKeyboard
 
 Korean Basic IME for Google TV and AOSP products
 Support H/W keyboard for AOSP products 
@@ -6,7 +6,7 @@ You must be set the value of Min-SDK version to 11
 
 
 
-# AOSP용 한글키보드
+# AOSP용 한글키보드 . ElkaKeyboard
 
 - H/W 키보드를 지원합니다.
 - 메인 브랜치에서 발생한 버그를 수정하였습니다.
