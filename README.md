@@ -15,8 +15,9 @@ You must be set the value of Min-SDK version to 11
   - Capslook 및 Shift 키 오동작 수정
 - 아파치라이센스를 따릅니다. 편리하게 수정해서 사용하시기 바랍니다.
   
-  # Licence 
-  Copyright [2017] [Elka]
+
+# Licence 
+Copyright 2017 jk Choi
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
